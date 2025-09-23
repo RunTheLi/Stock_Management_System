@@ -19,6 +19,11 @@ class Product {
     // Example: Product(int id, string name, int quantity, double price, string description)
     Product(int _id, string _name, int _quantity, double _price, string _description);
     // Getter methods (optional)
+    int getId() const { return id; }
+    std::string getName() const { return name; }
+    int getQuantity() const { return quantity; }
+    double getPrice() const { return price; }
+    std::string getDescription() const { return description; }
     // e.g., getId(), getName(), getQuantity(), etc.
 
     // Setter methods (optional)

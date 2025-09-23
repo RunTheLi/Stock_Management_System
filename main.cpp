@@ -8,8 +8,11 @@ int main() {
     Inventory inv("stock.db"); // pass the database filename
     if (inv.connectDatabase()) {
         std::cout << "Database is ready for operations." << std::endl;
+
+        Product p1(0, "Apple", 50, 1.5, "Fresg red apples");
     } else {
         std::cerr << "Failed to connect to database." << std::endl;
     }
+
     return 0;
 }
