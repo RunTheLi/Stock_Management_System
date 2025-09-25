@@ -8,16 +8,36 @@ Inventory::Inventory(const std::string& databaseName) {
     db = nullptr;
 }
 
-bool Inventory::connectDatabase(){
+bool Inventory::connectDatabase() {
+    // open database
     int rc = sqlite3_open(dbName.c_str(), &db);
     if (rc) {
-        std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+        std::cerr << "❌ Can't open database: " << sqlite3_errmsg(db) << std::endl;
         return false;
-    } else {
-        std::cout << "Connected successfully to " << dbName << std::endl;
-        return true;
     }
+
+    std::cout << "✅ Connected successfully to " << dbName << std::endl;
+
+    // create table if it doesn't exist
+    std::string create_sql =
+        "CREATE TABLE IF NOT EXISTS Products ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "name TEXT NOT NULL, "
+        "quantity INTEGER, "
+        "price REAL, "
+        "description TEXT);";
+
+    char* errMsg = nullptr;
+    rc = sqlite3_exec(db, create_sql.c_str(), nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "❌ SQL error (table creation): " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+        return false;
+    }
+
+    return true;
 }
+
 
 void Inventory::addProduct(Product p) {
     std::string sql = "INSERT INTO Products (name, quantity, price, description) VALUES ('" +
