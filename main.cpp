@@ -1,8 +1,37 @@
 #include <iostream>
 #include "Inventory.h"
 #include "Product.h"
+#include <limits>
 
 using namespace std;
+
+int getIntInput(string& prompt) {
+    int value;
+    while(true) {
+        cout << prompt;
+        if (cin >> value) {
+            return value;
+        } else {
+            cout << "⚠️ Invalid input, please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    }
+}
+
+double getDoubleInput(string& prompt) {
+    double value;
+    while(true) {
+        cout << prompt;
+        if (cin >> value) {
+            return value;
+        } else {
+            cout << "⚠️ Invalid input, please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    }
+}
 
 int main() {
     Inventory inv("stock.db");
@@ -22,54 +51,64 @@ int main() {
         cout << "Enter your choice: ";
         cin >> choice;
 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
         if (choice == 1) {
             string name, description;
             int quantity;
             double price;
 
-            cin.ignore(); // clear input buffer
             cout << "Enter product name: ";
             getline(cin, name);
-            cout << "Enter quantity: ";
-            cin >> quantity;
-            cout << "Enter price: ";
-            cin >> price;
-            cin.ignore();
+            quantity = getIntInput("Enter quantity: ");
+            price = getDoubleInput("Enter price: ");
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // flush
             cout << "Enter description: ";
             getline(cin, description);
 
-            Product p(0, name, quantity, price, description);
-            inv.addProduct(p);
+            if (quantity < 0 || price < 0) {
+                cout << "⚠️ Quantity and price cannot be negative." << endl;
+            } else {
+                Product p(0, name, quantity, price, description);
+                inv.addProduct(p);
+            }
 
         } else if (choice == 2) {
             inv.viewProducts();
 
         } else if (choice == 3) {
-            int id, quantity;
-            double price;
+            int id = getIntInput("Enter product id to update: ");
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            
             string name, description;
+            int quantity;
+            double price;
 
-            cout << "Enter product id to update: ";
-            cin >> id;
-            cin.ignore();
             cout << "Enter new name: ";
             getline(cin, name);
-            cout << "Enter new quantity: ";
-            cin >> quantity;
-            cout << "Enter new price: ";
-            cin >> price;
-            cin.ignore();
+            quantity = getIntInput("Enter new quantity: ");
+            price = getDoubleInput("Enter new price: ");
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Enter new description: ";
             getline(cin, description);
 
-            Product updatedP(id, name, quantity, price, description);
-            inv.updateProduct(updatedP);
+            if (quantity < 0 || price < 0) {
+                cout << "⚠️ Quantity and price cannot be negative." << endl;
+            } else {
+                Product updatedP(id, name, quantity, price, description);
+                inv.updateProduct(updatedP);
+            }
 
         } else if (choice == 4) {
-            int id;
-            cout << "Enter product id to delete: ";
-            cin >> id;
-            inv.deleteProduct(id);
+            int id = getIntInput("Enter product id to delete: ");
+            char confirm;
+            cout << "Are you sure you want to delete product " << id << "? (y/n): ";
+            cin >> confirm;
+            if (confirm == 'y' || confirm == 'Y') {
+                inv.deleteProduct(id);
+            } else {
+                cout << "❌ Delete cancelled." << endl;
+            }
 
         } else if (choice == 5) {
             cout << "👋 Exiting program. Goodbye!" << endl;
