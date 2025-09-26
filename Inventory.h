@@ -26,6 +26,8 @@ class Inventory {
         void searchProductById(int id);
         void searchProductByName(const std::string& name);
         static int productCallback(void* NotUsed, int argc, char** argv, char** azColName);
+
+        ~Inventory();
 };
 
 #endif

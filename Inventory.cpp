@@ -1,5 +1,6 @@
 //Inventory.cpp
 #include "Inventory.h"
+#include <iomanip>
 
 using namespace std;
 
@@ -62,15 +63,17 @@ void Inventory::viewProducts() {
     std::string sql = "SELECT id, name, quantity, price, description FROM Products;";
     char* errMsg = nullptr;
 
-    auto callback = [](void* NotUsed, int argc, char** argv, char** azColName) -> int {
-        for (int i = 0; i < argc; i++) {
-            std::cout << azColName[i] << ": " << (argv[i] ? argv[i] : "NULL") << " | ";
-        }
-        std::cout << std::endl;
-        return 0;
-    };
+    // Header
+    std::cout << std::left
+              << std::setw(5)  << "ID"
+              << std::setw(20) << "Name"
+              << std::setw(8)  << "Qty"
+              << std::setw(10) << "Price"
+              << std::setw(30) << "Description"
+              << std::endl;
+    std::cout << std::string(5+20+8+10+30, '-') << std::endl;
 
-    int rc = sqlite3_exec(db, sql.c_str(), callback, nullptr, &errMsg);
+    int rc = sqlite3_exec(db, sql.c_str(), Inventory::productCallback, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
         std::cerr << "❌ SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
@@ -78,6 +81,7 @@ void Inventory::viewProducts() {
         std::cout << "✅ Products listed successfully!" << std::endl;
     }
 }
+
 
 void Inventory::updateProduct(Product p) {
     std::string sql = "UPDATE Products SET "
@@ -140,16 +144,22 @@ void Inventory::searchProductByName(const std::string& name) {
 }
 
 //Create a Shared Callback for Search Results
+
 int Inventory::productCallback(void* NotUsed, int argc, char** argv, char** azColName) {
-    if (argc == 0) {
+    if (argc == 0 || !argv[0]) {
         std::cout << "❌ No product found." << std::endl;
     } else {
-        std::cout << "id: " << (argv[0] ? argv[0] : "NULL")
-                  << " | name: " << (argv[1] ? argv[1] : "NULL")
-                  << " | quantity: " << (argv[2] ? argv[2] : "NULL")
-                  << " | price: " << (argv[3] ? argv[3] : "NULL")
-                  << " | description: " << (argv[4] ? argv[4] : "NULL")
-                  << " | " << std::endl;
+        std::cout << std::left
+                  << std::setw(5)  << (argv[0] ? argv[0] : "NULL")      // ID
+                  << std::setw(20) << (argv[1] ? argv[1] : "NULL")      // Name
+                  << std::setw(8)  << (argv[2] ? argv[2] : "NULL")      // Quantity
+                  << std::setw(10) << (argv[3] ? argv[3] : "NULL")      // Price
+                  << std::setw(30) << (argv[4] ? argv[4] : "NULL")      // Description
+                  << std::endl;
     }
     return 0;
+}
+
+Inventory::~Inventory() {
+    if (db) sqlite3_close(db);
 }
