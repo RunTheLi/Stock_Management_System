@@ -24,7 +24,8 @@ class Inventory {
         void deleteProduct(int id);
 
         void searchProductById(int id);
-        void searchProductByName(std::string& name);
+        void searchProductByName(const std::string& name);
+        static int productCallback(void* NotUsed, int argc, char** argv, char** azColName);
 };
 
 #endif

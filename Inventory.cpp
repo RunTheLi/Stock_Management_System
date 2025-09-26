@@ -116,44 +116,40 @@ void Inventory::searchProductById(int id) {
     std::string sql = "SELECT * FROM Products WHERE id = " + std::to_string(id) + ";";
     char* errMsg = nullptr;
 
-    auto callback = [](void* NotUsed, int argc, char** argv, char** azColName) -> int { 
-        if(argc == 0) {
-            std::cout << "❌ No product found with that ID." <<std::endl;
-        } else {
-            for (int i = 0; i < argc; i++) {
-                std::cout << azColName[i] << ": " << (argv[i] ? argv[i] : "NULL") << " | ";
-            }
-            std::cout << std::endl;
-        }
-        return 0;
-    };
-
-    int rc = sqlite3_exec(db, sql.c_str(), callback, nullptr, &errMsg);
+    int rc = sqlite3_exec(db, sql.c_str(), productCallback, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
-        std::cerr << "❌ SQL error: " << errMsg << std::endl;
+        std::cerr << "SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
+    } else {
+        std::cout << "✅ Search by ID completed!" << std::endl;
     }
 }
 
-void Inventory::searchProductByName(std::string& name) {
+
+void Inventory::searchProductByName(const std::string& name) {
     std::string sql = "SELECT * FROM Products WHERE name LIKE '%" + name + "%';";
     char* errMsg = nullptr;
 
-    auto callback = [](void* NotUsed, int argc, char** argv, char** azColName) -> int { 
-        if(argc == 0) {
-            std::cout << "❌ No product found with that Name." <<std::endl;
-        } else {
-            for (int i = 0; i < argc; i++) {
-                std::cout << azColName[i] << ": " << (argv[i] ? argv[i] : "NULL") << " | ";
-            }
-            std::cout << std::endl;
-        }
-        return 0;
-    };
-
-    int rc = sqlite3_exec(db, sql.c_str(), callback, nullptr, &errMsg);
+    int rc = sqlite3_exec(db, sql.c_str(), productCallback, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
-        std::cerr << "❌ SQL error: " << errMsg << std::endl;
+        std::cerr << "SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
+    } else {
+        std::cout << "✅ Search by Name completed!" << std::endl;
     }
+}
+
+//Create a Shared Callback for Search Results
+int Inventory::productCallback(void* NotUsed, int argc, char** argv, char** azColName) {
+    if (argc == 0) {
+        std::cout << "❌ No product found." << std::endl;
+    } else {
+        std::cout << "id: " << (argv[0] ? argv[0] : "NULL")
+                  << " | name: " << (argv[1] ? argv[1] : "NULL")
+                  << " | quantity: " << (argv[2] ? argv[2] : "NULL")
+                  << " | price: " << (argv[3] ? argv[3] : "NULL")
+                  << " | description: " << (argv[4] ? argv[4] : "NULL")
+                  << " | " << std::endl;
+    }
+    return 0;
 }
