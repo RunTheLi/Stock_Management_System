@@ -1,13 +1,14 @@
 #include <iostream>
+#include <limits>       // for numeric_limits
 #include "Inventory.h"
 #include "Product.h"
-#include <limits>
 
 using namespace std;
 
-int getIntInput(string& prompt) {
+// Helper: get integer safely
+int getIntInput(const string& prompt) {
     int value;
-    while(true) {
+    while (true) {
         cout << prompt;
         if (cin >> value) {
             return value;
@@ -19,14 +20,15 @@ int getIntInput(string& prompt) {
     }
 }
 
-double getDoubleInput(string& prompt) {
+// Helper: get double safely
+double getDoubleInput(const string& prompt) {
     double value;
-    while(true) {
+    while (true) {
         cout << prompt;
         if (cin >> value) {
             return value;
         } else {
-            cout << "⚠️ Invalid input, please enter a number." << endl;
+            cout << "⚠️ Invalid input, please enter a valid number." << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
@@ -51,7 +53,7 @@ int main() {
         cout << "Enter your choice: ";
         cin >> choice;
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // flush input buffer
 
         if (choice == 1) {
             string name, description;
@@ -121,6 +123,7 @@ int main() {
 
     return 0;
 }
+
 
 //HARD CODE 
 //Product p1(0, "Apple", 50, 1.5, "Fresh red apple");
