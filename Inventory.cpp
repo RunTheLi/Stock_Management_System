@@ -111,3 +111,49 @@ void Inventory::deleteProduct(int id) {
         std::cout << "🗑️ Product with id " << id << " deleted successfully!" << std::endl;
     }
 }
+
+void Inventory::searchProductById(int id) {
+    std::string sql = "SELECT * FROM Products WHERE id = " + std::to_string(id) + ";";
+    char* errMsg = nullptr;
+
+    auto callback = [](void* NotUsed, int argc, char** argv, char** azColName) -> int { 
+        if(argc == 0) {
+            std::cout << "❌ No product found with that ID." <<std::endl;
+        } else {
+            for (int i = 0; i < argc; i++) {
+                std::cout << azColName[i] << ": " << (argv[i] ? argv[i] : "NULL") << " | ";
+            }
+            std::cout << std::endl;
+        }
+        return 0;
+    };
+
+    int rc = sqlite3_exec(db, sql.c_str(), callback, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "❌ SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+    }
+}
+
+void Inventory::searchProductByName(std::string& name) {
+    std::string sql = "SELECT * FROM Products WHERE name LIKE '%" + name + "%';";
+    char* errMsg = nullptr;
+
+    auto callback = [](void* NotUsed, int argc, char** argv, char** azColName) -> int { 
+        if(argc == 0) {
+            std::cout << "❌ No product found with that Name." <<std::endl;
+        } else {
+            for (int i = 0; i < argc; i++) {
+                std::cout << azColName[i] << ": " << (argv[i] ? argv[i] : "NULL") << " | ";
+            }
+            std::cout << std::endl;
+        }
+        return 0;
+    };
+
+    int rc = sqlite3_exec(db, sql.c_str(), callback, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "❌ SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+    }
+}

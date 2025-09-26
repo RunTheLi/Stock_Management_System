@@ -49,7 +49,8 @@ int main() {
         cout << "2. View Products" << endl;
         cout << "3. Update Product" << endl;
         cout << "4. Delete Product" << endl;
-        cout << "5. Exit" << endl;
+        cout << "5. Search Product" << endl;
+        cout << "6. Exit" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -113,13 +114,33 @@ int main() {
             }
 
         } else if (choice == 5) {
+            int searchChoice;
+            cout << "Search by: 1. ID  2. Name" << endl;
+            cin >> searchChoice;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            if (searchChoice == 1) {
+                int id = getIntInput("Enter product id: ");
+                inv.searchProductById(id);
+                    } else if (searchChoice == 2) {
+                        string name;
+                        cout << "Enter product name (partial allowed): ";
+                        getline(cin, name);
+                        inv.searchProductByName(name);
+                } else {
+                    cout << "⚠️ Invalid search option." << endl;
+                }
+                
+        } else if (choice == 6) {
             cout << "👋 Exiting program. Goodbye!" << endl;
 
         } else {
             cout << "⚠️ Invalid choice, try again." << endl;
         }
 
-    } while (choice != 5);
+        
+
+    } while (choice != 6);
 
     return 0;
 }
