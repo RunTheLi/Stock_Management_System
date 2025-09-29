@@ -64,6 +64,7 @@ void Inventory::viewProducts() {
     char* errMsg = nullptr;
 
     // Header
+    std::cout << "\n📦 Current Inventory:\n";
     std::cout << std::left
               << std::setw(5)  << "ID"
               << std::setw(20) << "Name"
@@ -73,6 +74,7 @@ void Inventory::viewProducts() {
               << std::endl;
     std::cout << std::string(5+20+8+10+30, '-') << std::endl;
 
+    // Run query
     int rc = sqlite3_exec(db, sql.c_str(), Inventory::productCallback, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
         std::cerr << "❌ SQL error: " << errMsg << std::endl;
@@ -81,6 +83,7 @@ void Inventory::viewProducts() {
         std::cout << "✅ Products listed successfully!" << std::endl;
     }
 }
+
 
 
 void Inventory::updateProduct(Product p) {
@@ -120,28 +123,44 @@ void Inventory::searchProductById(int id) {
     std::string sql = "SELECT * FROM Products WHERE id = " + std::to_string(id) + ";";
     char* errMsg = nullptr;
 
-    int rc = sqlite3_exec(db, sql.c_str(), productCallback, nullptr, &errMsg);
+    std::cout << "\n🔍 Search Result (by ID):\n";
+    std::cout << std::left
+              << std::setw(5)  << "ID"
+              << std::setw(20) << "Name"
+              << std::setw(8)  << "Qty"
+              << std::setw(10) << "Price"
+              << std::setw(30) << "Description"
+              << std::endl;
+    std::cout << std::string(5+20+8+10+30, '-') << std::endl;
+
+    int rc = sqlite3_exec(db, sql.c_str(), Inventory::productCallback, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
-        std::cerr << "SQL error: " << errMsg << std::endl;
+        std::cerr << "❌ SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
-    } else {
-        std::cout << "✅ Search by ID completed!" << std::endl;
     }
 }
-
 
 void Inventory::searchProductByName(const std::string& name) {
     std::string sql = "SELECT * FROM Products WHERE name LIKE '%" + name + "%';";
     char* errMsg = nullptr;
 
-    int rc = sqlite3_exec(db, sql.c_str(), productCallback, nullptr, &errMsg);
+    std::cout << "\n🔍 Search Results (by Name):\n";
+    std::cout << std::left
+              << std::setw(5)  << "ID"
+              << std::setw(20) << "Name"
+              << std::setw(8)  << "Qty"
+              << std::setw(10) << "Price"
+              << std::setw(30) << "Description"
+              << std::endl;
+    std::cout << std::string(5+20+8+10+30, '-') << std::endl;
+
+    int rc = sqlite3_exec(db, sql.c_str(), Inventory::productCallback, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
-        std::cerr << "SQL error: " << errMsg << std::endl;
+        std::cerr << "❌ SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
-    } else {
-        std::cout << "✅ Search by Name completed!" << std::endl;
     }
 }
+
 
 //Create a Shared Callback for Search Results
 

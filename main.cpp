@@ -1,5 +1,5 @@
 #include <iostream>
-#include <limits>       // for numeric_limits
+#include <limits>
 #include <cstdlib>
 #include <iomanip>
 #include "Inventory.h"
@@ -7,7 +7,14 @@
 
 using namespace std;
 
+// Optional: Colors for terminal (works on most Linux/WSL terminals)
+#define RESET   "\033[0m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define CYAN    "\033[36m"
+#define RED     "\033[31m"
 
+// Clear screen function
 void clearScreen() {
 #ifdef _WIN32
     system("cls");
@@ -16,65 +23,69 @@ void clearScreen() {
 #endif
 }
 
+// Wait for user to press enter
 void waitForEnter() {
     cout << "\nPress Enter to continue...";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    // If input buffer already empty, wait for one more newline:
-    if (cin.peek() == '\n') { cin.get(); }
+    if (cin.peek() == '\n') cin.get();
 }
 
-// Helper: get integer safely
+// Safe integer input
 int getIntInput(const string& prompt) {
     int value;
     while (true) {
         cout << prompt;
-        if (cin >> value) {
-            return value;
-        } else {
-            cout << "⚠️ Invalid input, please enter a number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
+        if (cin >> value) return value;
+        cout << RED << "⚠️ Invalid input, enter a number." << RESET << endl;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
 
-// Helper: get double safely
+// Safe double input
 double getDoubleInput(const string& prompt) {
     double value;
     while (true) {
         cout << prompt;
-        if (cin >> value) {
-            return value;
-        } else {
-            cout << "⚠️ Invalid input, please enter a valid number." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
+        if (cin >> value) return value;
+        cout << RED << "⚠️ Invalid input, enter a valid number." << RESET << endl;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
 
+// Display menu
+void showMenu() {
+    cout << CYAN;
+    cout << "\n========================================\n";
+    cout << "      📦 Stock Management System\n";
+    cout << "========================================\n" << RESET;
+    cout << "1️⃣  Add Product\n";
+    cout << "2️⃣  View Products\n";
+    cout << "3️⃣  Update Product\n";
+    cout << "4️⃣  Delete Product\n";
+    cout << "5️⃣  Search Product\n";
+    cout << "6️⃣  Exit\n";
+    cout << "----------------------------------------\n";
+    cout << "👉 Enter your choice: ";
+}
+
 int main() {
-    Inventory inv("stock.db");
+    Inventory inv("stock.db"); // make sure the filename matches your DB
+
     if (!inv.connectDatabase()) {
-        cerr << "❌ Failed to connect to database." << endl;
+        cerr << RED << "❌ Failed to connect to database." << RESET << endl;
         return -1;
     }
 
-    int choice = 0;
+    int choice;
     do {
         clearScreen();
-        cout << "===== Stock Management System =====" << endl;
-        cout << "1. Add Product" << endl;
-        cout << "2. View Products" << endl;
-        cout << "3. Update Product" << endl;
-        cout << "4. Delete Product" << endl;
-        cout << "5. Search Product" << endl;
-        cout << "6. Exit" << endl;
-        cout << "Enter your choice: ";
-        cin >> choice;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // flush
+        showMenu();
+        choice = getIntInput("");
 
         if (choice == 1) {
+            cin.ignore();
             string name, description;
             int quantity;
             double price;
@@ -83,18 +94,12 @@ int main() {
             getline(cin, name);
             quantity = getIntInput("Enter quantity: ");
             price = getDoubleInput("Enter price: ");
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.ignore();
             cout << "Enter description: ";
             getline(cin, description);
 
-            if (name.empty()) {
-                cout << "⚠️ Name cannot be empty." << endl;
-            } else if (quantity < 0 || price < 0) {
-                cout << "⚠️ Quantity and price cannot be negative." << endl;
-            } else {
-                Product p(0, name, quantity, price, description);
-                inv.addProduct(p);
-            }
+            Product p(0, name, quantity, price, description);
+            inv.addProduct(p);
             waitForEnter();
 
         } else if (choice == 2) {
@@ -102,72 +107,56 @@ int main() {
             waitForEnter();
 
         } else if (choice == 3) {
-            int id = getIntInput("Enter product id to update: ");
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-            string name, description;
-            int quantity;
+            int id, quantity;
             double price;
+            string name, description;
 
+            id = getIntInput("Enter product ID to update: ");
+            cin.ignore();
             cout << "Enter new name: ";
             getline(cin, name);
             quantity = getIntInput("Enter new quantity: ");
             price = getDoubleInput("Enter new price: ");
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.ignore();
             cout << "Enter new description: ";
             getline(cin, description);
 
-            if (name.empty()) {
-                cout << "⚠️ Name cannot be empty." << endl;
-            } else if (quantity < 0 || price < 0) {
-                cout << "⚠️ Quantity and price cannot be negative." << endl;
-            } else {
-                Product updatedP(id, name, quantity, price, description);
-                inv.updateProduct(updatedP);
-            }
+            Product updatedP(id, name, quantity, price, description);
+            inv.updateProduct(updatedP);
             waitForEnter();
 
         } else if (choice == 4) {
-            int id = getIntInput("Enter product id to delete: ");
-            char confirm;
-            cout << "Are you sure you want to delete product " << id << "? (y/n): ";
-            cin >> confirm;
-            if (confirm == 'y' || confirm == 'Y') {
-                inv.deleteProduct(id);
-            } else {
-                cout << "❌ Delete cancelled." << endl;
-            }
+            int id = getIntInput("Enter product ID to delete: ");
+            inv.deleteProduct(id);
             waitForEnter();
 
         } else if (choice == 5) {
             int searchChoice;
-            cout << "Search by: 1. ID  2. Name" << endl;
-            cin >> searchChoice;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "\n🔍 Search Options\n";
+            cout << "1️⃣  Search by ID\n";
+            cout << "2️⃣  Search by Name\n";
+            cout << "👉 Enter your choice: ";
+            searchChoice = getIntInput("");
 
+            cin.ignore(); // clear buffer
             if (searchChoice == 1) {
-                int id = getIntInput("Enter product id: ");
-                // print header for consistency
-                cout << left << setw(5) << "ID" << setw(20) << "Name" << setw(8) << "Qty" << setw(10) << "Price" << setw(30) << "Description" << endl;
-                cout << string(5+20+8+10+30, '-') << endl;
+                int id = getIntInput("Enter product ID: ");
                 inv.searchProductById(id);
             } else if (searchChoice == 2) {
                 string name;
                 cout << "Enter product name (partial allowed): ";
                 getline(cin, name);
-                cout << left << setw(5) << "ID" << setw(20) << "Name" << setw(8) << "Qty" << setw(10) << "Price" << setw(30) << "Description" << endl;
-                cout << string(5+20+8+10+30, '-') << endl;
                 inv.searchProductByName(name);
             } else {
-                cout << "⚠️ Invalid search option." << endl;
+                cout << RED << "⚠️ Invalid search option." << RESET << endl;
             }
             waitForEnter();
 
         } else if (choice == 6) {
-            cout << "👋 Exiting program. Goodbye!" << endl;
-            // destructor of Inventory will close DB if you added it
+            cout << GREEN << "👋 Exiting program. Goodbye!" << RESET << endl;
+
         } else {
-            cout << "⚠️ Invalid choice, try again." << endl;
+            cout << RED << "⚠️ Invalid choice, try again." << RESET << endl;
             waitForEnter();
         }
 
@@ -175,6 +164,7 @@ int main() {
 
     return 0;
 }
+
 
 
 
