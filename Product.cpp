@@ -17,3 +17,7 @@ void Product::display() {
     cout << "ID: " << id << ", Name: " << name << ", Quantity: " << quantity
          << ", Price: " << price << ", Description: " << description << endl;
 }
+
+void Product::setQuantity(int quantity) {
+    this->quantity = quantity;
+}

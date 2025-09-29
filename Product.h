@@ -25,10 +25,10 @@ class Product {
     double getPrice() const { return price; }
     std::string getDescription() const { return description; }
     // e.g., getId(), getName(), getQuantity(), etc.
-
+    
     // Setter methods (optional)
     // e.g., setQuantity(int q), setPrice(double p), etc.
-
+    void setQuantity(int quantity);
     // display() method (optional)
     void display();
 

@@ -1,5 +1,6 @@
 //Inventory.cpp
 #include "Inventory.h"
+#include <limits>
 #include <iomanip>
 
 using namespace std;
@@ -41,14 +42,39 @@ bool Inventory::connectDatabase() {
 
 
 void Inventory::addProduct(Product p) {
+    // Check if product already exists
+    if (productExists(p.getName())) {
+        std::cout << "⚠️ Product \"" << p.getName() << "\" already exists!" << std::endl;
+        std::cout << "Do you want to update its quantity instead? (y/n): ";
+        char choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (choice == 'y' || choice == 'Y') {
+            // Fetch current quantity
+            std::string sqlSelect = "SELECT quantity FROM Products WHERE name = '" + p.getName() + "';";
+            sqlite3_stmt* stmt;
+            int rc = sqlite3_prepare_v2(db, sqlSelect.c_str(), -1, &stmt, nullptr);
+            int currentQty = 0;
+            if (rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW) {
+                currentQty = sqlite3_column_int(stmt, 0);
+            }
+            sqlite3_finalize(stmt);
+
+            // Update quantity
+            p.setQuantity(p.getQuantity() + currentQty);
+            updateProduct(p); // reuse your updateProduct method
+        }
+        return; // Exit, don’t insert duplicate
+    }
+
+    // If product doesn’t exist, insert normally
     std::string sql = "INSERT INTO Products (name, quantity, price, description) VALUES ('" +
                       p.getName() + "', " +
                       std::to_string(p.getQuantity()) + ", " +
                       std::to_string(p.getPrice()) + ", '" +
                       p.getDescription() + "');";
-    
-    char* errMsg = nullptr;
 
+    char* errMsg = nullptr;
     int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
 
     if(rc != SQLITE_OK) {
@@ -177,6 +203,25 @@ int Inventory::productCallback(void* NotUsed, int argc, char** argv, char** azCo
                   << std::endl;
     }
     return 0;
+}
+
+bool Inventory::productExists(const std::string& name) {
+    std::string sql = "SELECT COUNT(*) FROM Products WHERE name = '" + name + "';";
+    sqlite3_stmt* stmt;
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "SQL error (productExists): " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    rc = sqlite3_step(stmt);
+    int count = 0;
+    if (rc == SQLITE_ROW) {
+        count = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+
+    return count > 0;
 }
 
 Inventory::~Inventory() {
