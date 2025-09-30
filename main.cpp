@@ -107,24 +107,9 @@ int main() {
             waitForEnter();
 
         } else if (choice == 3) {
-            int id, quantity;
-            double price;
-            string name, description;
-
-            id = getIntInput("Enter product ID to update: ");
-            cin.ignore();
-            cout << "Enter new name: ";
-            getline(cin, name);
-            quantity = getIntInput("Enter new quantity: ");
-            price = getDoubleInput("Enter new price: ");
-            cin.ignore();
-            cout << "Enter new description: ";
-            getline(cin, description);
-
-            Product updatedP(id, name, quantity, price, description);
-            inv.updateProduct(updatedP);
+            int id = getIntInput("Enter product ID to update: ");
+            inv.updateProductInteractive(id);   // 👈 new interactive method
             waitForEnter();
-
         } else if (choice == 4) {
             int id = getIntInput("Enter product ID to delete: ");
             inv.deleteProduct(id);

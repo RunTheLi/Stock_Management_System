@@ -132,18 +132,28 @@ void Inventory::updateProduct(Product p) {
 }
 
 void Inventory::deleteProduct(int id) {
+    char choice;
+    std::cout << "⚠️ Are you sure you want to delete product with ID " << id << "? (y/n): ";
+    std::cin >> choice;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    if (choice != 'y' && choice != 'Y') {
+        std::cout << "❌ Deletion cancelled." << std::endl;
+        return;
+    }
+
     std::string sql = "DELETE FROM Products WHERE id = " + std::to_string(id) + ";";
     char* errMsg = nullptr;
 
     int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
-
     if (rc != SQLITE_OK) {
         std::cerr << "❌ SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
     } else {
-        std::cout << "🗑️ Product with id " << id << " deleted successfully!" << std::endl;
+        std::cout << "🗑️ Product with ID " << id << " deleted successfully!" << std::endl;
     }
 }
+
 
 void Inventory::searchProductById(int id) {
     std::string sql = "SELECT * FROM Products WHERE id = " + std::to_string(id) + ";";
@@ -222,6 +232,84 @@ bool Inventory::productExists(const std::string& name) {
     sqlite3_finalize(stmt);
 
     return count > 0;
+}
+
+void Inventory::updateProductInteractive(int id) {
+    // 1. Fetch current product
+    std::string sql = "SELECT id, name, quantity, price, description FROM Products WHERE id = " + std::to_string(id) + ";";
+    sqlite3_stmt* stmt;
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    
+    if (rc != SQLITE_OK) {
+        std::cerr << "❌ SQL error: " << sqlite3_errmsg(db) << std::endl;
+        return;
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        std::cout << "❌ Product with ID " << id << " not found." << std::endl;
+        sqlite3_finalize(stmt);
+        return;
+    }
+
+    // Extract current values
+    std::string name   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+    int quantity       = sqlite3_column_int(stmt, 2);
+    double price       = sqlite3_column_double(stmt, 3);
+    std::string desc   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
+
+    sqlite3_finalize(stmt);
+
+    // 2. Ask user for updates
+    std::string newName = name;
+    int newQty = quantity;
+    double newPrice = price;
+    std::string newDesc = desc;
+    char choice;
+
+    std::cout << "Current name: " << name << ". Update? (y/n): ";
+    std::cin >> choice; std::cin.ignore();
+    if (choice == 'y' || choice == 'Y') {
+        std::cout << "Enter new name: ";
+        std::getline(std::cin, newName);
+    }
+
+    std::cout << "Current quantity: " << quantity << ". Update? (y/n): ";
+    std::cin >> choice; std::cin.ignore();
+    if (choice == 'y' || choice == 'Y') {
+        std::cout << "Enter new quantity: ";
+        std::cin >> newQty; std::cin.ignore();
+    }
+
+    std::cout << "Current price: " << price << ". Update? (y/n): ";
+    std::cin >> choice; std::cin.ignore();
+    if (choice == 'y' || choice == 'Y') {
+        std::cout << "Enter new price: ";
+        std::cin >> newPrice; std::cin.ignore();
+    }
+
+    std::cout << "Current description: " << desc << ". Update? (y/n): ";
+    std::cin >> choice; std::cin.ignore();
+    if (choice == 'y' || choice == 'Y') {
+        std::cout << "Enter new description: ";
+        std::getline(std::cin, newDesc);
+    }
+
+    // 3. Run update SQL
+    std::string updateSql = "UPDATE Products SET "
+        "name='" + newName + "', "
+        "quantity=" + std::to_string(newQty) + ", "
+        "price=" + std::to_string(newPrice) + ", "
+        "description='" + newDesc + "' "
+        "WHERE id=" + std::to_string(id) + ";";
+
+    char* errMsg = nullptr;
+    rc = sqlite3_exec(db, updateSql.c_str(), nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "❌ SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+    } else {
+        std::cout << "✅ Product updated successfully!" << std::endl;
+    }
 }
 
 Inventory::~Inventory() {

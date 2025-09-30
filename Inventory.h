@@ -29,6 +29,7 @@ public:
     static int productCallback(void* NotUsed, int argc, char** argv, char** azColName);
 
     bool productExists(const std::string& name); // Add this
+    void updateProductInteractive(int id);
 };
 
 #endif
