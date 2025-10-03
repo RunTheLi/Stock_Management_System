@@ -2,6 +2,13 @@
 #include "Inventory.h"
 #include <limits>
 #include <iomanip>
+#include <fstream>
+
+#define RESET   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define CYAN    "\033[36m"
 
 using namespace std;
 
@@ -204,16 +211,26 @@ int Inventory::productCallback(void* NotUsed, int argc, char** argv, char** azCo
     if (argc == 0 || !argv[0]) {
         std::cout << "❌ No product found." << std::endl;
     } else {
+        int quantity = argv[2] ? std::stoi(argv[2]) : 0; // get quantity
+        bool lowStock = quantity <= 5; // threshold
+
+        // Print normally, but highlight low stock
+        if (lowStock) std::cout << RED; // low stock color
+        else std::cout << RESET;
+
         std::cout << std::left
-                  << std::setw(5)  << (argv[0] ? argv[0] : "NULL")      // ID
-                  << std::setw(20) << (argv[1] ? argv[1] : "NULL")      // Name
-                  << std::setw(8)  << (argv[2] ? argv[2] : "NULL")      // Quantity
-                  << std::setw(10) << (argv[3] ? argv[3] : "NULL")      // Price
-                  << std::setw(30) << (argv[4] ? argv[4] : "NULL")      // Description
+                  << std::setw(5)  << (argv[0] ? argv[0] : "NULL")
+                  << std::setw(20) << (argv[1] ? argv[1] : "NULL")
+                  << std::setw(8)  << (argv[2] ? argv[2] : "NULL")
+                  << std::setw(10) << (argv[3] ? argv[3] : "NULL")
+                  << std::setw(30) << (argv[4] ? argv[4] : "NULL")
                   << std::endl;
+
+        if (lowStock) std::cout << RESET; // reset color
     }
     return 0;
 }
+
 
 bool Inventory::productExists(const std::string& name) {
     std::string sql = "SELECT COUNT(*) FROM Products WHERE name = '" + name + "';";
@@ -345,6 +362,47 @@ void Inventory::viewSummary() {
     sqlite3_finalize(stmt);
 }
 
+void Inventory::exportToCSV(const std::string& filename) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "❌ Could not open file: " << filename << std::endl;
+        return;
+    }
+
+    // Write CSV header
+    file << "ID,Name,Quantity,Price,Description\n";
+
+    // Prepare SQL query to get all products
+    std::string sql = "SELECT id, name, quantity, price, description FROM Products;";
+    sqlite3_stmt* stmt;
+
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "❌ SQL error: " << sqlite3_errmsg(db) << std::endl;
+        return;
+    }
+
+    // Loop through results
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int id = sqlite3_column_int(stmt, 0);
+        const unsigned char* name = sqlite3_column_text(stmt, 1);
+        int quantity = sqlite3_column_int(stmt, 2);
+        double price = sqlite3_column_double(stmt, 3);
+        const unsigned char* description = sqlite3_column_text(stmt, 4);
+
+        file << id << ","
+             << (name ? reinterpret_cast<const char*>(name) : "") << ","
+             << quantity << ","
+             << price << ","
+             << (description ? reinterpret_cast<const char*>(description) : "")
+             << "\n";
+    }
+
+    sqlite3_finalize(stmt);
+    file.close();
+
+    std::cout << "✅ Inventory exported successfully to " << filename << std::endl;
+}
 
 Inventory::~Inventory() {
     if (db) sqlite3_close(db);
