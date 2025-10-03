@@ -30,6 +30,7 @@ public:
 
     bool productExists(const std::string& name); // Add this
     void updateProductInteractive(int id);
+    void viewSummary();
 };
 
 #endif

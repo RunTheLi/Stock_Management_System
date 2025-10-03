@@ -312,6 +312,40 @@ void Inventory::updateProductInteractive(int id) {
     }
 }
 
+void Inventory::viewSummary() {
+    std::string sql = 
+        "SELECT "
+        "COUNT(*) AS totalProducts, "
+        "SUM(quantity) AS totalQuantity, "
+        "SUM(quantity * price) AS totalValue "
+        "FROM Products;";
+
+    sqlite3_stmt* stmt;
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+
+    if (rc != SQLITE_OK) {
+        std::cerr << "❌ SQL error in summary: " << sqlite3_errmsg(db) << std::endl;
+        return;
+    }
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        int totalProducts = sqlite3_column_int(stmt, 0);
+        int totalQuantity = sqlite3_column_int(stmt, 1);
+        double totalValue = sqlite3_column_double(stmt, 2);
+
+        std::cout << "\n📊 Inventory Summary:\n";
+        std::cout << "-----------------------------\n";
+        std::cout << "Total Products : " << totalProducts << "\n";
+        std::cout << "Total Quantity : " << totalQuantity << "\n";
+        std::cout << "Total Value    : $" << totalValue << "\n";
+    } else {
+        std::cout << "⚠️ Could not retrieve summary.\n";
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+
 Inventory::~Inventory() {
     if (db) sqlite3_close(db);
 }

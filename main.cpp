@@ -65,7 +65,8 @@ void showMenu() {
     cout << "3️⃣  Update Product\n";
     cout << "4️⃣  Delete Product\n";
     cout << "5️⃣  Search Product\n";
-    cout << "6️⃣  Exit\n";
+    cout << "6️⃣  Inventory Summary\n";
+    cout << "7️⃣  Exit\n";
     cout << "----------------------------------------\n";
     cout << "👉 Enter your choice: ";
 }
@@ -137,9 +138,12 @@ int main() {
             }
             waitForEnter();
 
-        } else if (choice == 6) {
+        } else if (choice == 7) {
             cout << GREEN << "👋 Exiting program. Goodbye!" << RESET << endl;
 
+        } else if (choice == 6) {
+            inv.viewSummary();
+            waitForEnter();
         } else {
             cout << RED << "⚠️ Invalid choice, try again." << RESET << endl;
             waitForEnter();
